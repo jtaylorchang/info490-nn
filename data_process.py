@@ -22,7 +22,7 @@ def load_pickle(f: str) -> Any:
     return pickle.load(f, encoding="latin1")
 
 
-def get_MUSHROOM_data(validation: float, testing: float = 0.2) -> dict:
+def get_MUSHROOM_data(validation: float, testing: float = 0.1) -> dict:
     """Load the mushroom dataset.
 
     Parameters:
@@ -64,7 +64,7 @@ def construct_MUSHROOM():
     X = X.values
 
     X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=123
+        X, y, test_size=0.1, random_state=123
     )
     np.save("mushroom/X_train.npy", X_train)
     np.save("mushroom/y_train.npy", y_train)
