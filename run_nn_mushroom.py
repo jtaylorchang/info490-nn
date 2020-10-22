@@ -1,10 +1,11 @@
 import numpy as np
-from data_process import get_MUSHROOM_data
+from data_process import construct_MUSHROOM, get_MUSHROOM_data
 from models.neural_net import NeuralNetwork, SGD
 
 # TRAINING = 0.6 indicates 60% of the data is used as the training dataset.
 VALIDATION = 0.2
 
+construct_MUSHROOM()
 data = get_MUSHROOM_data(VALIDATION)
 X_train, y_train = data['X_train'], data['y_train']
 X_val, y_val = data['X_val'], data['y_val']

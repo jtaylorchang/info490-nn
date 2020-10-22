@@ -56,8 +56,8 @@ def construct_MUSHROOM():
     dataset = pd.read_csv("mushroom/mushrooms.csv")
     y = dataset["class"]
     X = dataset.drop("class", axis=1)
-    Encoder_X = LabelEncoder()
     for col in X.columns:
+        Encoder_X = LabelEncoder()
         X[col] = Encoder_X.fit_transform(X[col])
     Encoder_y = LabelEncoder()
     y = Encoder_y.fit_transform(y)
