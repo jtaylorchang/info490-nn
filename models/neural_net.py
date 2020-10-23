@@ -163,7 +163,7 @@ class LinearLayer(Layer):
         """
         # Store input and output data for use in backward pass
         self.linear_in = x
-        self.linear_out = np.dot(x, self.w) + self.b
+        self.linear_out = x.dot(self.w) + self.b
         self.activated_out = self.activation_func.evaluate(self.linear_out)
 
         return self.activated_out

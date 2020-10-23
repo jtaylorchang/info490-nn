@@ -64,7 +64,7 @@ num_classes = n_class
 epochs = 100
 batch_size = 200
 learning_rate = 0.1
-learning_rate_decay = 0.95
+learning_rate_decay = 0.99
 regularization = 0.01
 
 # Initialize a new neural network model
