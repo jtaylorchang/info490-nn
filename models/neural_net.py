@@ -109,9 +109,9 @@ class CrossEntropy(LossFunction):
         Returns:
             The Cross Entropy Loss
         """
-        reg_cost = sum(np.linalg.norm(w) for w in weights) * (reg / (2 * y.shape[0]))
+        # reg_cost = sum(np.linalg.norm(w) for w in weights) * (reg / (2 * y.shape[0]))
 
-        return - np.sum(y * np.ma.log(y_pred).filled(0)) + reg_cost
+        return - np.sum(y * np.ma.log(y_pred).filled(0))  # + reg_cost
 
     @classmethod
     def evaluate_grad_with_softmax(cls, y: np.ndarray, scores: np.ndarray) -> np.ndarray:
