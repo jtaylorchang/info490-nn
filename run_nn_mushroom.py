@@ -3,7 +3,7 @@ from data_process import construct_MUSHROOM, get_MUSHROOM_data
 from models.neural_net import NeuralNetwork, SGD
 
 # TRAINING = 0.6 indicates 60% of the data is used as the training dataset.
-VALIDATION = 0.2
+VALIDATION = 0.1
 
 construct_MUSHROOM()
 data = get_MUSHROOM_data(VALIDATION)
@@ -68,6 +68,8 @@ learning_rate_decay = 0.99
 regularization = 0.01
 
 # Initialize a new neural network model
-sgd_2_layer = NeuralNetwork(input_size, hidden_sizes, num_classes, num_layers, optimizer=SGD, norm_weights=True)
+net = NeuralNetwork(input_size, hidden_sizes, num_classes, num_layers, optimizer=SGD, norm_weights=True)
 
-sgd_2_layer_train_loss, sgd_2_layer_train_accuracy, sgd_2_layer_val_accuracy = train(sgd_2_layer, epochs, batch_size, learning_rate, learning_rate_decay, regularization)
+train_loss, train_accuracy, val_accuracy = train(net, epochs, batch_size, learning_rate, learning_rate_decay, regularization)
+
+print('test_accuracy:', net.forward_accuracy(X_test, y_test))
