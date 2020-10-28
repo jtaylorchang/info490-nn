@@ -68,7 +68,7 @@ learning_rate_decay = 0.99
 regularization = 0.01
 
 # Initialize a new neural network model
-net = NeuralNetwork(input_size, hidden_sizes, num_classes, num_layers, optimizer=SGD, norm_weights=True)
+net = NeuralNetwork(input_size, hidden_sizes, num_classes, num_layers, optimizer=SGD(), norm_weights=True)
 
 train_loss, train_accuracy, val_accuracy = train(net, epochs, batch_size, learning_rate, learning_rate_decay, regularization)
 

@@ -179,19 +179,13 @@ class LinearLayer(Layer):
 
 
 class Optimizer:
-    def __init__(self, layers: List[LinearLayer]):
-        self.layers = layers
-
     def update(self, weight_grads: List[np.ndarray], bias_grads: List[np.ndarray], lr: float) -> None:
         raise Exception("Unimplemented")
 
 
 class SGD(Optimizer):
-    def __init__(self, layers: List[LinearLayer]):
-        super().__init__(layers)
-
-    def update(self, weight_grads: List[np.ndarray], bias_grads: List[np.ndarray], lr: float) -> None:
-        for layer, dW, db in zip(self.layers, weight_grads, bias_grads):
+    def update(self, layers, weight_grads: List[np.ndarray], bias_grads: List[np.ndarray], lr: float) -> None:
+        for layer, dW, db in zip(layers, weight_grads, bias_grads):
             layer.update(dW, db, lr)
 
 
@@ -257,7 +251,7 @@ class NeuralNetwork:
         hidden_sizes: Sequence[int],
         output_size: int,
         num_layers: int,
-        optimizer: Type[Optimizer] = SGD,
+        optimizer: Type[Optimizer] = SGD(),
         norm_weights: bool = False
     ):
         """Initialize the model. Weights are initialized to small random values
@@ -292,7 +286,7 @@ class NeuralNetwork:
         final_layer = LinearLayer(activated_layer_sizes[-1], self.output_size, activation_func=Softmax)
         self.layers = activated_layers + [final_layer]
 
-        self.optimizer = optimizer(self.layers)
+        self.optimizer = optimizer
 
     def forward(self, X: np.ndarray) -> np.ndarray:
         """Compute the scores for each class for all of the data samples.
@@ -382,7 +376,7 @@ class NeuralNetwork:
             w_grads.insert(0, d_w)
             b_grads.insert(0, d_b)
 
-        self.optimizer.update(w_grads, b_grads, lr)
+        self.optimizer.update(self.layers, w_grads, b_grads, lr)
 
         if self.norm_weights:
             w_norm = max(np.linalg.norm(l.w) for l in self.layers) / len(self.layers)
