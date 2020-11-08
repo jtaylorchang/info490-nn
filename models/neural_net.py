@@ -224,8 +224,8 @@ class Adam(Optimizer):
         if not adam_layers:
             self.adam_layers = [AdamLayer() for i in range(len(layers))]
 
-    def update(self, weight_grads: List[np.ndarray], bias_grads: List[np.ndarray], lr: float) -> None:
-        for layer, dW, db, adam in zip(self.layers, weight_grads, bias_grads, self.adam_layers):
+    def update(self, layers, weight_grads: List[np.ndarray], bias_grads: List[np.ndarray], lr: float) -> None:
+        for layer, dW, db, adam in zip(layers, weight_grads, bias_grads, self.adam_layers):
             adam_dW, adam_db = adam.step(dW, db)
             layer.update(adam_dW, adam_db, lr)
 
