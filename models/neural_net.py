@@ -114,12 +114,12 @@ class CrossEntropy(LossFunction):
         return - np.sum(y * np.ma.log(y_pred).filled(0)) + reg_cost
 
     @classmethod
-    def evaluate_grad_with_softmax(cls, y: np.ndarray, scores: np.ndarray) -> np.ndarray:
-        sum_of_scores = np.sum(scores, axis=1)
-        correct_scores = scores[range(len(y)), y]
+    def evaluate_grad_with_softmax(cls, y: np.ndarray, y_hat: np.ndarray) -> np.ndarray:
+        sum_of_outputs = np.sum(y_hat, axis=1)
+        correct_outputs = y_hat[range(len(y)), y]
 
-        d_layer = scores
-        d_layer[range(len(y)), y] = (correct_scores - sum_of_scores) / sum_of_scores
+        d_layer = y_hat
+        d_layer[range(len(y)), y] = (correct_outputs - sum_of_outputs) / sum_of_outputs
         d_layer /= len(y)
         return d_layer
 
@@ -352,12 +352,12 @@ class NeuralNetwork:
         Returns:
             Total cost for this batch of training samples
         """
-        scores = self.forward(X)
+        y_hat = self.forward(X)
 
         y_one_hot = self.one_hot_encode(y)
-        loss = CrossEntropy.evaluate(y_one_hot, scores, reg, [layer.w for layer in self.layers])
+        loss = CrossEntropy.evaluate(y_one_hot, y_hat, reg, [layer.w for layer in self.layers])
 
-        d_layer = CrossEntropy.evaluate_grad_with_softmax(y, scores)
+        d_layer = CrossEntropy.evaluate_grad_with_softmax(y, y_hat)
 
         w_grads = []
         b_grads = []
