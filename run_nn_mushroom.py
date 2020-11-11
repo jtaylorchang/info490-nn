@@ -28,10 +28,6 @@ def train(net, epochs, batch_size, learning_rate, learning_rate_decay, regulariz
 
     # For each epoch...
     for epoch in range(epochs):
-        print('epoch:', epoch)
-
-        # Shuffle the dataset
-
         # Training
         train_accuracy[epoch] += net.forward_accuracy(X_train, y_train)
         # For each mini-batch...
@@ -48,10 +44,8 @@ def train(net, epochs, batch_size, learning_rate, learning_rate_decay, regulariz
         # No need to run the backward pass here, just run the forward pass to compute accuracy
         val_accuracy[epoch] += net.forward_accuracy(X_val, y_val)
 
-        stats_string = "Loss: {train_loss:.1f}, Train: {train_accuracy:.1f}%, Val: {val_accuracy:.1f}%"
-        print(stats_string.format(train_loss=train_loss[epoch],
-                                  train_accuracy=train_accuracy[epoch] * 100,
-                                  val_accuracy=val_accuracy[epoch] * 100))
+        stats_string = "Epoch: {:d} | Loss: {:.1f} | Train: {:.1f}% | Val: {:.1f}%"
+        print(stats_string.format(epoch, train_loss[epoch], train_accuracy[epoch] * 100, val_accuracy[epoch] * 100))
 
     return train_loss, train_accuracy, val_accuracy
 
