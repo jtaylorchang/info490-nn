@@ -14,53 +14,70 @@ np.random.seed(0)
 
 
 class ActivationFunction:
-    @classmethod
-    def __call__(cls, activation_input: np.ndarray) -> np.ndarray:
-        return cls.evaluate(activation_input)
-
-    @classmethod
-    def evaluate(cls, activation_input: np.ndarray) -> np.ndarray:
-        pass
-
-    @classmethod
-    def evaluate_grad(cls, grad_output: np.ndarray, activated_out) -> np.ndarray:
-        pass
-
-
-class ReLU(ActivationFunction):
-    """Computes the ReLU function on the input
-    activation_input: 1D array with shape (size,)
-    returns: 1D array with same shape as input
+    """
+    Activation Function base class
+    https://en.wikipedia.org/wiki/Activation_function
     """
 
     @classmethod
-    def evaluate(cls, activation_input: np.ndarray) -> np.ndarray:
-        return np.maximum(activation_input, 0)
+    def forward(cls, linear_out):
+        """
+        Evaluate the activation function on the output of the linear layer
+        """
+        raise Exception("Unimplemented")
 
     @classmethod
-    def evaluate_grad(cls, grad_output: np.ndarray, activated_out: np.ndarray) -> np.ndarray:
-        new_grad = grad_output.copy()
+    def backward(cls, grad_out, activated_out):
+        """
+        Evaluate the gradient of the activation function based on the outputs from the forward pass
+        """
+        raise Exception("Unimplemented")
+
+
+class ReLU(ActivationFunction):
+    """
+    Implements the ReLU activation function (the de facto choice for linear neural nets)
+    https://en.wikipedia.org/wiki/Rectifier_(neural_networks)
+    """
+
+    @classmethod
+    def forward(cls, linear_out):
+        """
+        Output the linear layer's value if it is positive, and 0 if it is not
+        """
+        return np.maximum(linear_out, 0)
+
+    @classmethod
+    def backward(cls, grad_out, activated_out):
+        """
+        Clears the gradient wherever the activated_out was 0
+        """
+        new_grad = grad_out.copy()
         new_grad[activated_out == 0] = 0
         return new_grad
 
 
 class Softmax(ActivationFunction):
-    """Computes the softmax function on the input
-    Z: (N,d) array
-    returns: array with same shape as input
+    """
+    Implements the Softmax activation function
+    https://en.wikipedia.org/wiki/Softmax_function
     """
 
     @classmethod
-    def evaluate(cls, Z: np.ndarray) -> np.ndarray:
-        shifted = Z - np.max(Z, axis=1).reshape(len(Z), 1)
-        amplitude = np.exp(shifted)
-        norm = np.sum(amplitude, axis=1).reshape(len(Z), 1)
-
+    def forward(cls, linear_out: np.ndarray) -> np.ndarray:
+        normalized_out = linear_out - np.max(linear_out, axis=1).reshape(len(linear_out), 1)
+        amplitude = np.exp(normalized_out)
+        norm = np.sum(amplitude, axis=1).reshape(len(linear_out), 1)
         return amplitude / norm
 
     @classmethod
-    def evaluate_grad(cls, grad_output: np.ndarray, activated_out: np.ndarray) -> np.ndarray:
-        raise Exception("Unimplemented")  # Not needed: cancels with cross entropy
+    def backward(cls, grad_out, activated_out):
+        """
+        The gradient of softmax does not need to be computed independently as it combines
+        nicely with the cross entropy loss function. Softmax will not be used in between
+        layers and is instead used to promote smooth outputs
+        """
+        raise Exception("Unimplemented")
 
 
 class Identity(ActivationFunction):
@@ -84,37 +101,48 @@ class Identity(ActivationFunction):
 
 
 class LossFunction:
-    @classmethod
-    def __call__(cls, y: np.ndarray, y_pred: np.ndarray, reg: float, weights) -> float:
-        return cls.evaluate(y, y_pred, reg, weights)
+    """
+    Loss Function base class
+    https://en.wikipedia.org/wiki/Loss_function
+    """
 
     @classmethod
-    def evaluate(cls, y: np.ndarray, y_pred: np.ndarray, reg: float, weights) -> float:
-        raise Exception("UNIMPLEMENTED")
+    def forward(cls, y, y_hat):
+        """
+        Compute the loss between the actual labels and the predicted labels
+        """
+        raise Exception("Unimplemented")
 
     @classmethod
-    def evaluate_grad(cls, y: np.ndarray, y_pred: np.ndarray) -> np.ndarray:
-        raise Exception("UNIMPLEMENTED")
+    def backward(cls, y, y_hat):
+        """
+        Compute the gradient of the loss between the actual labels and the
+        predicted labels
+        """
+        raise Exception("Unimplemented")
 
 
 class CrossEntropy(LossFunction):
+    """
+    Implements the Cross Entropy loss function
+    https://en.wikipedia.org/wiki/Cross_entropy
+    """
+
     @classmethod
-    def evaluate(cls, y: np.ndarray, y_pred: np.ndarray, reg: float, weights) -> float:
-        """Compute the Cross Entropy Loss by comparing the Softmax outputs to the one hot encoded labels
-
-        Parameters:
-            y: The softmax outputs of shape (N, C)
-            y_pred: The one hot labels of shape (N, C)
-
-        Returns:
-            The Cross Entropy Loss
+    def forward(cls, y, y_hat):
         """
-        reg_cost = sum(np.linalg.norm(w) for w in weights) * (reg / (2 * y.shape[0]))
-
-        return - np.sum(y * np.ma.log(y_pred).filled(0)) + reg_cost
+        Compute the Cross Entropy loss which compares softmax outputs against
+        one hot encoded labels and returns the negative sum of the products
+        """
+        return - np.sum(y * np.ma.log(y_hat).filled(0))
 
     @classmethod
-    def evaluate_grad_with_softmax(cls, y: np.ndarray, y_hat: np.ndarray) -> np.ndarray:
+    def backward(cls, y, y_hat):
+        """
+        Compute the Cross Entropy and Softmax combined gradient (due to the
+        simplification of the calculation) which subtracts the sum of the scores
+        from the actual labels
+        """
         sum_of_outputs = np.sum(y_hat, axis=1)
         correct_outputs = y_hat[range(len(y)), y]
 
@@ -164,11 +192,11 @@ class LinearLayer(Layer):
         # Store input and output data for use in backward pass
         self.linear_in = x
         self.linear_out = x.dot(self.w) + self.b
-        self.activated_out = self.activation_func.evaluate(self.linear_out)
+        self.activated_out = self.activation_func.forward(self.linear_out)
 
         return self.activated_out
 
-    def update(self, step_W, step_b, lr: float) -> None:
+    def update(self, step_W, step_b) -> None:
         self.w += step_W
         self.b += step_b
 
@@ -179,14 +207,31 @@ class LinearLayer(Layer):
 
 
 class Optimizer:
-    def update(self, weight_grads: List[np.ndarray], bias_grads: List[np.ndarray], lr: float) -> None:
+    """
+    Optimizer base class that allows for different optimization methods to be
+    plugged into the neural net
+    """
+
+    def step(self, layers, d_weights, d_biases, lr):
+        """
+        Update the layer weights with the optimizer's update step algorithm
+        """
         raise Exception("Unimplemented")
 
 
 class SGD(Optimizer):
-    def update(self, layers, weight_grads: List[np.ndarray], bias_grads: List[np.ndarray], lr: float) -> None:
-        for layer, dW, db in zip(layers, weight_grads, bias_grads):
-            layer.update(-lr * dW, -lr * db, lr)
+    """
+    Implements the Stochastic Gradient Descent optimizer
+    https://en.wikipedia.org/wiki/Stochastic_gradient_descent
+    """
+
+    def step(self, layers, d_weights, d_biases, lr):
+        """
+        The SGD update step simply shifts the weights in the opposite direction
+        of the gradient
+        """
+        for layer, d_W, d_b in zip(layers, d_weights, d_biases):
+            layer.update(-lr * d_W, -lr * d_b)
 
 
 class AdamLayer:
@@ -355,9 +400,9 @@ class NeuralNetwork:
         y_hat = self.forward(X)
 
         y_one_hot = self.one_hot_encode(y)
-        loss = CrossEntropy.evaluate(y_one_hot, y_hat, reg, [layer.w for layer in self.layers])
+        loss = CrossEntropy.forward(y_one_hot, y_hat)
 
-        d_layer = CrossEntropy.evaluate_grad_with_softmax(y, y_hat)
+        d_layer = CrossEntropy.backward(y, y_hat)
 
         w_grads = []
         b_grads = []
@@ -368,7 +413,7 @@ class NeuralNetwork:
                 next_layer = self.layers[idx + 1]
 
                 d_layer = d_layer.dot(next_layer.w.T)
-                d_layer = layer.activation_func.evaluate_grad(d_layer, layer.activated_out)
+                d_layer = layer.activation_func.backward(d_layer, layer.activated_out)
 
             d_w = layer.linear_in.T.dot(d_layer) + 2 * reg * layer.w
             d_b = np.sum(d_layer, axis=0)
@@ -376,7 +421,7 @@ class NeuralNetwork:
             w_grads.insert(0, d_w)
             b_grads.insert(0, d_b)
 
-        self.optimizer.update(self.layers, w_grads, b_grads, lr)
+        self.optimizer.step(self.layers, w_grads, b_grads, lr)
 
         if self.norm_weights:
             w_norm = max(np.linalg.norm(l.w) for l in self.layers) / len(self.layers)
