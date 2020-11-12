@@ -29,7 +29,7 @@ def train(net, epochs, batch_size, learning_rate, learning_rate_decay, regulariz
     # For each epoch...
     for epoch in range(epochs):
         # Training
-        train_accuracy[epoch] += net.forward_accuracy(X_train, y_train)
+        train_accuracy[epoch] += net.predict(X_train, y_train)[1]
         # For each mini-batch...
         for batch in range(X_train.shape[0] // batch_size):
             # Create a mini-batch of training data and labels
@@ -42,7 +42,7 @@ def train(net, epochs, batch_size, learning_rate, learning_rate_decay, regulariz
 
         # Validation
         # No need to run the backward pass here, just run the forward pass to compute accuracy
-        val_accuracy[epoch] += net.forward_accuracy(X_val, y_val)
+        val_accuracy[epoch] += net.predict(X_val, y_val)[1]
 
         stats_string = "Epoch: {:d} | Loss: {:.1f} | Train: {:.1f}% | Val: {:.1f}%"
         print(stats_string.format(epoch, train_loss[epoch], train_accuracy[epoch] * 100, val_accuracy[epoch] * 100))
@@ -67,4 +67,4 @@ net = NeuralNetwork(input_size, hidden_sizes, num_classes, num_layers, optimizer
 
 train_loss, train_accuracy, val_accuracy = train(net, epochs, batch_size, learning_rate, learning_rate_decay, regularization)
 
-print('test_accuracy:', net.forward_accuracy(X_test, y_test))
+print('test_accuracy:', net.predict(X_test, y_test)[1])

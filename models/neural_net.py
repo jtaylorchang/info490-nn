@@ -184,7 +184,7 @@ class LinearLayer(Layer):
         self.w = 1e-4 * np.random.randn(input_size, output_size)
         self.b = np.zeros(output_size)
 
-    def evaluate(self, x: np.ndarray) -> np.ndarray:
+    def forward(self, x: np.ndarray) -> np.ndarray:
         """Computes the softmax function on the input
         x: 1D array with shape (size,)
         returns: 1D array with same shape as input
@@ -346,29 +346,27 @@ class NeuralNetwork:
             Matrix of shape (N, C) where scores[i, c] is the score for class
                 c on input X[i] outputted from the last layer of your network
         """
-        return reduce(lambda next_in, func: func(next_in), self.layers, X)
+        y_hat = X
 
-    def predict_from_scores(self, scores: np.ndarray) -> np.ndarray:
-        """Compute the label based on the class scores for each item
+        for layer in self.layers:
+            y_hat = layer.forward(y_hat)
 
-        Parameters:
-            scores: Results of forward pass (N, C)
+        return y_hat
 
-        Returns:
-            Matrix of shape (N, 1)
+    def predict(self, X, y=None):
         """
-        return np.argmax(scores, axis=1)
-
-    def accuracy(self, scores: np.ndarray, y: np.ndarray) -> float:
-        predictions = self.predict_from_scores(scores)
-
-        correct = sum((y_pred == y_real for y_pred, y_real in zip(predictions, y)))
-
-        return correct / len(y)
-
-    def forward_accuracy(self, X: np.ndarray, y: np.ndarray) -> float:
+        Predict the outputs of the given input features. If input labels are provided,
+        also measure the accuracy of the predictions.
+        """
         scores = self.forward(X)
-        return self.accuracy(scores, y)
+        predictions = np.argmax(scores, axis=1)
+
+        if y is None:
+            return predictions
+
+        accuracy = sum((pred == real for pred, real in zip(predictions, y))) / len(y)
+
+        return predictions, accuracy
 
     def one_hot_encode(self, y: np.ndarray) -> np.ndarray:
         """Convert input labels (N, 1) to one-hot encoding (N, C)
