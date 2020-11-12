@@ -168,9 +168,9 @@ class LinearLayer(Layer):
 
         return self.activated_out
 
-    def update(self, w_grad: np.ndarray, b_grad: np.ndarray, lr: float) -> None:
-        self.w -= lr * w_grad
-        self.b -= lr * b_grad
+    def update(self, step_W, step_b, lr: float) -> None:
+        self.w += step_W
+        self.b += step_b
 
 
 """
@@ -186,7 +186,7 @@ class Optimizer:
 class SGD(Optimizer):
     def update(self, layers, weight_grads: List[np.ndarray], bias_grads: List[np.ndarray], lr: float) -> None:
         for layer, dW, db in zip(layers, weight_grads, bias_grads):
-            layer.update(dW, db, lr)
+            layer.update(-lr * dW, -lr * db, lr)
 
 
 class AdamLayer:
