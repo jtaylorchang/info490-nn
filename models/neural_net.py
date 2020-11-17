@@ -181,7 +181,7 @@ class LinearLayer(Layer):
 
         self.activation_func = activation_func
 
-        self.w = 1e-4 * np.random.randn(input_size, output_size)
+        self.w = np.random.randn(input_size, output_size) / input_size
         self.b = np.zeros(output_size)
 
     def forward(self, x: np.ndarray) -> np.ndarray:
